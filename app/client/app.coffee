@@ -12,6 +12,12 @@ exports.init = ->
 
   editor = initEditor 'editor', 'coffee'
   editor_js = initEditor 'editor-js', 'javascript'
+  editor.getSession().on 'change', ->
+    try
+      compiled = CoffeeScript.compile(editor.getSession().getValue(), {bare: on})
+      editor_js.getSession().setValue compiled
+    catch e
+      console.log e
 
 initEditor = (id, mode) ->
   editor = ace.edit id
