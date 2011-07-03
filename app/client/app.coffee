@@ -11,3 +11,9 @@ exports.init = ->
   SS.server.app.init (response) ->
     $('#message').text(response)
 
+  editor = ace.edit 'editor'
+  editor.getSession().setValue 'hoge'
+  # editor.setTeheme 'ace/theme/twilight'
+  editor.setTheme 'ace/theme/twilight'
+  Mode = require('ace/mode/coffee').Mode
+  editor.getSession().setMode(new Mode())
