@@ -11,6 +11,7 @@ exports.init = ->
     $('#message').text(response)
 
   editor = initEditor 'editor', 'coffee'
+  editor_js = initEditor 'editor-js', 'javascript'
 
 initEditor = (id, mode) ->
   editor = ace.edit id
