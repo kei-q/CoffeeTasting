@@ -1,6 +1,6 @@
 # Server-side Code
 
-g_users = []
+g_users = {}
 
 exports.authenticate = true
 
@@ -8,8 +8,7 @@ exports.actions =
 
   init: (cb) ->
     @session.on 'disconnect', (session) ->
-      # TODO: removeメソッド無いので実装すること
-      g_users.remove session.user_id
+      delete g_users[session.user_id]
       session.user.logout()
 
     if @session.user_id
@@ -23,10 +22,11 @@ exports.actions =
 
   signIn: (user, cb) ->
     @session.setUserId user
-    g_users.push user
+    g_users[user] = true
     SS.publish.broadcast 'newuser', {users: g_users}
-    cb {user: user, users: g_users}
+    cb {user: user}
 
   update: (text, cb) ->
     SS.publish.broadcast 'update', {user: @session.user_id, text: text}
     cb true
+

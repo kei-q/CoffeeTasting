@@ -5,6 +5,7 @@
 # SS.socket.on 'connect', ->     $('#message').text('SocketStream server is up :-)')
 
 g_user = 'test'
+g_editor = null
 g_viewer = null
 
 # This method is called automatically when the websocket connection is established. Do not rename/delete
@@ -16,7 +17,6 @@ exports.init = ->
   SS.events.on 'newuser', addUser
   SS.events.on 'update', updateViewer
 
-
 initEditor = (id, mode) ->
   editor = ace.edit id
   editor.setTheme 'ace/theme/twilight'
@@ -27,20 +27,20 @@ initEditor = (id, mode) ->
 displaySignInForm = ->
   $('#signIn').show().submit ->
     username = $('#signIn').find('input').val()
-    SS.server.app.signIn username, ({users}) ->
-      displayMainScreen(username)
+    SS.server.app.signIn username, ({user}) ->
+      displayMainScreen user
     false
 
 displayMainScreen = (user) ->
   $('#signIn').fadeOut(230) and $('#main').show()
   $('#username').text("username: #{user}")
 
-  editor = initEditor 'editor', 'coffee'
+  g_editor = initEditor 'editor', 'coffee'
   editor_js = initEditor 'editor-js', 'javascript'
   editor_js.setReadOnly true
-  editor.getSession().on 'change', ->
+  g_editor.getSession().on 'change', ->
     try
-      source = editor.getSession().getValue()
+      source = g_editor.getSession().getValue()
       compiled = CoffeeScript.compile(source, {bare: on})
       editor_js.getSession().setValue compiled
       SS.server.app.update source, (response) ->
@@ -58,17 +58,19 @@ displayMainScreen = (user) ->
     catch e
       console.log e
 
-
 addUser = ({users}) ->
   $('#userlist').empty()
-  for user in users
+  for own user of users
     do (user) ->
       e = $("<li>#{user}</li>")
       e.appendTo $('#userlist')
       e.click ->
+        e.css {backgroundColor: '#fedcba'}
+        SS.server.app.requestSource user, (source) ->
+          updateViewer g_user, source
         g_user = user
 
 updateViewer = ({user, text}) ->
-  console.log user
   if g_user is user
     g_viewer.getSession().setValue text
+
