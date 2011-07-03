@@ -34,9 +34,21 @@ displayMainScreen = (user) ->
 
   editor = initEditor 'editor', 'coffee'
   editor_js = initEditor 'editor-js', 'javascript'
+  editor_js.setReadOnly true
   editor.getSession().on 'change', ->
     try
       compiled = CoffeeScript.compile(editor.getSession().getValue(), {bare: on})
       editor_js.getSession().setValue compiled
+    catch e
+      console.log e
+
+  viewer = initEditor 'viewer', 'coffee'
+  viewer_js = initEditor 'viewer-js', 'javascript'
+  viewer.setReadOnly true
+  viewer_js.setReadOnly true
+  viewer.getSession().on 'change', ->
+    try
+      compiled = CoffeeScript.compile(viewer.getSession().getValue(), {bare: on})
+      viewer_js.getSession().setValue compiled
     catch e
       console.log e
