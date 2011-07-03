@@ -1,8 +1,17 @@
 # Server-side Code
 
+g_users = []
+
+exports.authenticate = true
+
 exports.actions =
 
   init: (cb) ->
+    @session.on 'disconnect', (session) ->
+      # TODO: removeメソッド無いので実装すること
+      g_users.remove session.user_id
+      session.user.logout()
+
     if @session.user_id
       R.get "user:#{@session.user_id}", (err, data) =>
         if data
@@ -14,6 +23,8 @@ exports.actions =
 
   signIn: (user, cb) ->
     @session.setUserId user
-    cb user
+    g_users.push user
+    g_users.unique()
+    cb {user: user, users: g_users}
 
 

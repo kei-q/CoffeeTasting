@@ -20,8 +20,12 @@ initEditor = (id, mode) ->
 
 displaySignInForm = ->
   $('#signIn').show().submit ->
-    SS.server.app.signIn $('#signIn').find('input').val(), (response) ->
-      displayMainScreen(response)
+    username = $('#signIn').find('input').val()
+    SS.server.app.signIn username, ({user, users}) ->
+      for tmp in users
+        e = $("<li>#{tmp}</li>")
+        e.appendTo $('#userlist')
+      displayMainScreen(user)
     false
 
 displayMainScreen = (user) ->
