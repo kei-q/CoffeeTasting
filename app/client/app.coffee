@@ -4,11 +4,17 @@
 # SS.socket.on 'disconnect', ->  $('#message').text('SocketStream server is down :-(')
 # SS.socket.on 'connect', ->     $('#message').text('SocketStream server is up :-)')
 
+g_user = 'test'
+g_viewer = null
+
 # This method is called automatically when the websocket connection is established. Do not rename/delete
 exports.init = ->
   # Make a call to the server to retrieve a message
   SS.server.app.init (user) ->
     if user then $('#main').show() else displaySignInForm()
+
+  SS.events.on 'newuser', addUser
+  SS.events.on 'update', updateViewer
 
 
 initEditor = (id, mode) ->
@@ -21,11 +27,8 @@ initEditor = (id, mode) ->
 displaySignInForm = ->
   $('#signIn').show().submit ->
     username = $('#signIn').find('input').val()
-    SS.server.app.signIn username, ({user, users}) ->
-      for tmp in users
-        e = $("<li>#{tmp}</li>")
-        e.appendTo $('#userlist')
-      displayMainScreen(user)
+    SS.server.app.signIn username, ({users}) ->
+      displayMainScreen(username)
     false
 
 displayMainScreen = (user) ->
@@ -37,18 +40,35 @@ displayMainScreen = (user) ->
   editor_js.setReadOnly true
   editor.getSession().on 'change', ->
     try
-      compiled = CoffeeScript.compile(editor.getSession().getValue(), {bare: on})
+      source = editor.getSession().getValue()
+      compiled = CoffeeScript.compile(source, {bare: on})
       editor_js.getSession().setValue compiled
+      SS.server.app.update source, (response) ->
     catch e
       console.log e
 
-  viewer = initEditor 'viewer', 'coffee'
+  g_viewer = initEditor 'viewer', 'coffee'
   viewer_js = initEditor 'viewer-js', 'javascript'
-  viewer.setReadOnly true
+  g_viewer.setReadOnly true
   viewer_js.setReadOnly true
-  viewer.getSession().on 'change', ->
+  g_viewer.getSession().on 'change', ->
     try
-      compiled = CoffeeScript.compile(viewer.getSession().getValue(), {bare: on})
+      compiled = CoffeeScript.compile(g_viewer.getSession().getValue(), {bare: on})
       viewer_js.getSession().setValue compiled
     catch e
       console.log e
+
+
+addUser = ({users}) ->
+  $('#userlist').empty()
+  for user in users
+    do (user) ->
+      e = $("<li>#{user}</li>")
+      e.appendTo $('#userlist')
+      e.click ->
+        g_user = user
+
+updateViewer = ({user, text}) ->
+  console.log user
+  if g_user is user
+    g_viewer.getSession().setValue text

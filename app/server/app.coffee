@@ -24,7 +24,9 @@ exports.actions =
   signIn: (user, cb) ->
     @session.setUserId user
     g_users.push user
-    g_users.unique()
+    SS.publish.broadcast 'newuser', {users: g_users}
     cb {user: user, users: g_users}
 
-
+  update: (text, cb) ->
+    SS.publish.broadcast 'update', {user: @session.user_id, text: text}
+    cb true
