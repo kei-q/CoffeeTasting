@@ -4,6 +4,14 @@ html(lang="en")
     != SocketStream
     title Welcome
   body
-    #editor
-    #editor-js
+    #wrapper
+      #main.views.hidden
+        #header
+          #username
+        #editor
+        #editor-js
+
+      form(onsubmit: 'return false')#signIn.views.hidden
+        h1 Please enter a username to begin:
+        input(type='text')
 
