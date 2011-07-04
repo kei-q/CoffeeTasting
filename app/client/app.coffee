@@ -17,30 +17,22 @@ exports.init = ->
   SS.events.on 'newuser', addUser
   SS.events.on 'update', updateViewer
 
-initEditor = (id, mode) ->
-  editor = ace.edit id
-  editor.setTheme 'ace/theme/twilight'
-  Mode = require("ace/mode/#{mode}").Mode
-  editor.getSession().setMode(new Mode())
-  editor
-
 displaySignInForm = ->
   $('#signIn').show().submit ->
-    username = $('#signIn').find('input').val()
-    SS.server.app.signIn username, ({user}) ->
+    SS.server.app.signIn $('#signIn').find('input').val() , ({user}) ->
       displayMainScreen user
-    false
 
 displayMainScreen = (user) ->
   $('#signIn').fadeOut(230) and $('#main').show()
   $('#username').text("username: #{user}")
 
-  g_editor = initEditor 'editor', 'coffee'
+  g_editor = initEditor 'editor', 'coffee', false
   editor_js = initEditor 'editor-js', 'javascript'
-  editor_js.setReadOnly true
-  g_editor.getSession().on 'change', ->
+
+  editorS = g_editor.getSession()
+  editorS.on 'change', ->
     try
-      source = g_editor.getSession().getValue()
+      source = editorS.getValue()
       compiled = CoffeeScript.compile(source, {bare: on})
       editor_js.getSession().setValue compiled
       SS.server.app.update source, (response) ->
@@ -49,14 +41,22 @@ displayMainScreen = (user) ->
 
   g_viewer = initEditor 'viewer', 'coffee'
   viewer_js = initEditor 'viewer-js', 'javascript'
-  g_viewer.setReadOnly true
-  viewer_js.setReadOnly true
-  g_viewer.getSession().on 'change', ->
+
+  viewerS = g_viewer.getSession()
+  viewerS.on 'change', ->
     try
-      compiled = CoffeeScript.compile(g_viewer.getSession().getValue(), {bare: on})
+      compiled = CoffeeScript.compile(viewerS.getValue(), {bare: on})
       viewer_js.getSession().setValue compiled
     catch e
       console.log e
+
+initEditor = (id, mode, readonly = true) ->
+  editor = ace.edit id
+  editor.setTheme 'ace/theme/twilight'
+  {Mode} = require "ace/mode/#{mode}"
+  editor.getSession().setMode(new Mode())
+  editor.setReadOnly readonly
+  editor
 
 addUser = ({users}) ->
   $('#userlist').empty()

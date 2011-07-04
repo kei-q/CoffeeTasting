@@ -5,7 +5,6 @@ g_users = {}
 exports.authenticate = true
 
 exports.actions =
-
   init: (cb) ->
     @session.on 'disconnect', (session) ->
       delete g_users[session.user_id]
