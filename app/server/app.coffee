@@ -19,14 +19,17 @@ exports.actions =
 
   signIn: (user, cb) ->
     @session.setUserId user
-    SS.publish.broadcast 'addUser', {user: user}
-    cb {user: user}
+    R.set "code:#{user}", ''
+    SS.publish.broadcast 'addUser', user
+    cb user
 
   update: (text, cb) ->
-    SS.publish.channel @session.user_id, 'update', {text: text}
+    SS.publish.channel @session.user_id, 'update', text
+    R.set "code:#{@session.user_id}", text
     cb true
 
   subscribe: (user, cb) ->
+    R.get "code:#{user}", (err, data) -> cb data
     @session.channel.unsubscribe @session.channel.list()
     @session.channel.subscribe user, cb
 
