@@ -8,14 +8,7 @@ exports.actions =
       SS.publish.broadcast 'remUser', session.user_id
       session.user.logout()
 
-    if @session.user_id
-      R.get "user:#{@session.user_id}", (err, data) =>
-        if data
-          cb data
-        else
-          cb false
-    else
-      cb false
+    cb true
 
   signIn: (user, cb) ->
     @session.setUserId user
@@ -33,5 +26,4 @@ exports.actions =
     @session.channel.unsubscribe @session.channel.list()
     @session.channel.subscribe user, cb
 
-  getUserList: (cb) ->
-    SS.users.online.now cb
+  getUserList: SS.users.online.now

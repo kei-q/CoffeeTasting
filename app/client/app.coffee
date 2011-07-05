@@ -1,13 +1,8 @@
 # Client-side Code
 
-# Bind to events
-# SS.socket.on 'disconnect', ->  $('#message').text('SocketStream server is down :-(')
-# SS.socket.on 'connect', ->     $('#message').text('SocketStream server is up :-)')
-
 g_editor = null
 g_viewer = null
 
-# This method is called automatically when the websocket connection is established. Do not rename/delete
 exports.init = ->
   SS.server.app.init (user) -> displaySignInForm()
 
@@ -20,34 +15,21 @@ displaySignInForm = ->
     SS.server.app.signIn $('#signIn').find('input').val(), displayMainScreen
     false
 
-displayMainScreen = ({user}) ->
+displayMainScreen = (user) ->
   $('#signIn').fadeOut(230) and $('#main').show()
   $('#username').text("username: #{user}")
+
   SS.server.app.getUserList (users) ->
-    addUser {user: user} for user in users
-  SS.server.app.subscribe user, updateViewer
+    users.forEach addUser
 
   g_editor = initEditor 'editor', 'coffee'
   editor_js = initEditor 'editor-js', 'javascript'
-
-  g_editor.getSession().on 'change', ->
-    try
-      source = g_editor.getSession().getValue()
-      compiled = CoffeeScript.compile(source, {bare: on})
-      editor_js.getSession().setValue compiled
-      SS.server.app.update source, (response) ->
-    catch e
-      console.log e
+  compile g_editor, editor_js, (source) ->
+    SS.server.app.update source, (response) ->
 
   g_viewer = initEditor 'viewer', 'coffee'
   viewer_js = initEditor 'viewer-js', 'javascript'
-
-  g_viewer.getSession().on 'change', ->
-    try
-      compiled = CoffeeScript.compile(g_viewer.getSession().getValue(), {bare: on})
-      viewer_js.getSession().setValue compiled
-    catch e
-      console.log e
+  compile g_viewer, viewer_js
 
 initEditor = (id, mode) ->
   editor = ace.edit id
@@ -56,17 +38,27 @@ initEditor = (id, mode) ->
   editor.getSession().setMode(new Mode())
   editor
 
-addUser = ({user}) ->
+compile = (from, to, block) ->
+  from.getSession().on 'change', ->
+    try
+      source = from.getSession().getValue()
+      compiled = CoffeeScript.compile source, {bare: on}
+      to.getSession().setValue compiled
+      block?(source)
+    catch e
+      console.log e
+
+addUser = (user) ->
    e = $("<li>#{user}</li>").addClass("user-#{user}").addClass('username')
    e.appendTo $('#userlist')
    e.click ->
-     $('.username').css(backgroundColor: '#ffffff')
-     e.css {backgroundColor: '#fedcba'}
+     $('.username').removeClass 'selected'
+     e.addClass 'selected'
      SS.server.app.subscribe user, updateViewer
 
 remUser = (user) ->
   $(".user-#{user}").remove()
 
-updateViewer = ({text}) ->
+updateViewer = (text) ->
   g_viewer.getSession().setValue text
 
