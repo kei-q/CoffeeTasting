@@ -57,9 +57,10 @@ initEditor = (id, mode) ->
   editor
 
 addUser = ({user}) ->
-   e = $("<li>#{user}</li>").addClass("user-#{user}")
+   e = $("<li>#{user}</li>").addClass("user-#{user}").addClass('username')
    e.appendTo $('#userlist')
    e.click ->
+     $('.username').css(backgroundColor: '#ffffff')
      e.css {backgroundColor: '#fedcba'}
      SS.server.app.subscribe user, updateViewer
 
